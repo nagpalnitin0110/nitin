@@ -1,0 +1,429 @@
+info sentinel
+
+sentinel slaves mymaster
+
+sentinel master mymaster
+
+redis-cli -p 26379
+
+redis-cli -p 6379
+
+helm install --name endpoints /root/nitin/redis-ha
+
+https://devopscube.com/install-configure-helm-kubernetes/     --------------            Helm installation
+
+https://github.com/helm/charts/tree/master/stable/redis-ha         ------------------        Redis HA
+
+
+endpoints-redis-ha.default.svc.cluster.local
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Installing from the RPM repository
+#Create a file called elasticsearch.repo in the /etc/yum.repos.d/ directory for RedHat based distributions, 
+
+#DO UPGRADE
+#In the terms of ordering, update first the master nodes, then data nodes, then load-balancing/client nodes.
+
+#Disable Shard reallocation
+curl -XPUT localhost:9200/_cluster/settings -d '{ "transient" : { "cluster.routing.allocation.enable" : "none" } }'
+
+#Shutdown the instance:
+curl -XPOST 'http://localhost:9200/_cluster/nodes/_local/_shutdown'
+
+sudo systemctl stop elasticsearch
+sudo yum update elasticsearch
+sudo systemctl start elasticsearch
+
+#Enable shard re-allocation:
+curl -XPUT localhost:9200/_cluster/settings -d '{ "transient" : { "cluster.routing.allocation.enable" : "all" } }'
+
+#Watch cluster go from yellow state to green with:
+curl -X GET http://localhost:9200/_cat/health?v // monitors the overal cluster state
+curl -X GET http://localhost:9200/_cat/nodes?v // verify that the new node joined the cluster
+curl -X GET http://localhost:9200/_cat/shards?v // see shards being started, initialized and relocated
+
+#Repeat for the next node.
+
+http://192.168.7.54:9200/_cluster/health?pretty
+
+http://192.168.7.48:9200/_nodes?pretty
+
+http://192.168.7.54:9200/_cat/indices
+
+curl -XGET 'http://192.168.7.46:9200/_cat/indices?pretty=true'
+
+http://192.168.7.52:9200/_cluster/health?level=shards
+
+
+
+
+---------------------------------------------------------------
+elastic upgrade through yum
+
+update the /etc/yum.repo.d/elasticsearch
+with 6.x version so that it will auto update rpm with latest package
+
+then
+
+yum update
+cd /usr/share/elasticsearch/
+ls
+mv plugins plugins_bkp
+mkdir plugins
+chown -R elasticsearch:elasticsearch plugins
+ll
+cd /etc/elasticsearch/node5/
+ls
+mv ingest-geoip ingest-geoip_bkp
+mv security security_bkp
+systemctl stop elasticsearch
+yum update elasticsearch
+systemctl start elasticsearch
+systemctl status elasticsearch
+
+
+https://stackoverflow.com/questions/52832983/upgrading-from-5-2-2-to-6-4-2-yum-install-vs-yum-update
+
+
+---------------------------------------------------------------------------------------------------------------------
+
+Kibana Upgarde through yum
+
+#All elastic nodes should be up to date to version we are going to upgrade kibana
+
+yum update
+yum update kibana
+chown -R 777 /var/lib/elastic /var/lib/elasticsearch
+systemctl start kibana.services
+OR
+service kibana start
+
+
+https://discuss.elastic.co/t/kibana-service-start-failed/189460/8
+
+https://stackoverflow.com/questions/48155774/elasticsearch-read-only-allow-delete-auto-setting
+
+https://kb.objectrocket.com/elasticsearch/how-to-fix-the-forbidden-12-read-only-api-error-in-elasticsearch-282    (Commands to use)
+
+
+
+--------------------------------------------------------------
+Error while installing metrics server
+
+https://stackoverflow.com/questions/54858746/error-from-server-notfound-podmetrics-metrics-k8s-io-mem-example-memory-demo
+
+------------------------------------------------------------------
+
+https://registry-k8s.yesbank.in:8443/
+
+https://github.com/kubernetes-sigs/metrics-server
+-------------------------------------------------------------------
+
+cd /etc
+  767  cd docker/
+  768  ls
+  769  cd certs.d/
+  770  ls
+  771  mkdir registry-k8s.yesbank.in
+  772  cd registry-k8s.yesbank.in/
+  773  cd
+  774  cd /etc/docker/certs.d/registry-k8s.yesbank.in/
+  775  openssl s_client --connect registry-k8s.yesbank.in:443
+  776  openssl s_client -connect -showcerts registry-k8s.yesbank.in:443
+  777  openssl s_client -showcerts -connect registry-k8s.yesbank.in:443
+  778  openssl s_client -showcerts -connect registry-k8s.yesbank.in:443 > registry-k8s.yesbank.in.crt
+  779  ls
+  780  cat registry-k8s.yesbank.in.crt 
+  781  vi registry-k8s.yesbank.in.crt 
+  782  cat registry-k8s.yesbank.in.crt 
+  783  docker push registry-k8s.yesbank.in/metrics-server-amd64:v0.3.6
+  784  docker login registry-k8s.yesbank.in
+  785  docker push registry-k8s.yesbank.in/metrics-server-amd64:v0.3.6
+  
+  -------------------------------------------------------------------------
+  
+  Installing Prometheus on server
+
+https://www.digitalocean.com/community/tutorials/how-to-install-prometheus-on-ubuntu-16-04
+
+Installing Prometheus & Grafana on k8s
+
+https://medium.com/@at_ishikawa/install-prometheus-and-grafana-by-helm-9784c73a3e97
+
+
+----------------------------------------------------------------------------------------------
+
+Create NFS mount point in local
+
+https://www.howtoforge.com/nfs-server-and-client-on-centos-7
+
+-------------------------------------------------------------------------
+Grafana user creation
+
+https://grafana.com/tutorials/create-users-and-teams/#1
+
+----------------------------------------------------------------------------
+
+/var/log/containers ------- Containers logs
+/var/log/containers      -----      Soft link    -------    /var/log/pod
+/var/lib/docker/containers    ------------ configuration files
+/var/lib/docker/volumes    --------------    Container mount point (volume)
+
+------------------------------------------------------------------------------
+
+Helm Manifest file creation
+
+https://github.com/helm/helm/issues/2798    ----------------------   ignore character which helm is considering as function so make it use as string
+
+---------------------------------------------------------------------------------
+Prometheus Config Data Store time period change
+
+https://github.com/prometheus/prometheus/issues/5213
+https://groups.google.com/forum/#!topic/prometheus-users/DhbTNUiyUyo
+
+----------------------------------------------------------------------------------
+Node Exporter file system explanation
+
+https://www.robustperception.io/filesystem-metrics-from-the-node-exporter
+
+---------------------------------------------------------------------------------------------
+
+Vagrant installation 
+
+https://linuxize.com/post/how-to-install-vagrant-on-ubuntu-18-04/
+https://docs.cumulusnetworks.com/cumulus-vx/Development-Environments/Vagrant-and-VirtualBox/
+https://www.josheaton.org/increase-memory-vagrant-virtual-machine/
+https://www.thisprogrammingthing.com/2015/multiple-vagrant-vms-in-one-vagrantfile/
+https://manski.net/2016/09/vagrant-multi-machine-tutorial/
+https://in.godaddy.com/blog/install-vagrant-ubuntu-14-04/
+
+
+---------------------------------------------------------------------------------------
+
+K8s Installation automation through vagrant
+
+https://blog.exxactcorp.com/building-a-kubernetes-cluster-using-vagrant/
+https://github.com/SubhakarKotta/k8s-vagrant-centos/tree/master/provisioning
+
+------------------------------------------------------------------------------------------
+
+K8s Upgrade Help
+
+https://platform9.com/blog/kubernetes-upgrade-the-definitive-guide-to-do-it-yourself/
+
+------------------------------------------------------------------------------------------
+
+Prometheus & Kibana Installation Through Bitnami
+
+https://docs.bitnami.com/tutorials/integrate-logging-kubernetes-kibana-elasticsearch-fluentd/
+
+------------------------------------------------------------------------------------------------
+
+K8s Configmap Update impact on Deployment
+
+https://blog.questionable.services/article/kubernetes-deployments-configmap-change/
+
+--------------------------------------------------------------------------------------------------
+
+K8s Installation Through Kubespray
+
+https://dzone.com/articles/kubespray-10-simple-steps-for-installing-a-product
+
+https://www.howtoforge.com/tutorial/how-to-install-kubernetes-on-ubuntu/
+
+https://www.howtoforge.com/tutorial/centos-kubernetes-docker-cluster/
+
+--------------------------------------------------------------------------------------------------
+
+ETCD BackupDoc
+
+https://github.com/etcd-io/etcd/blob/release-3.0/Documentation/op-guide/recovery.md
+https://elastisys.com/2018/12/10/backup-kubernetes-how-and-why/
+https://docs.openshift.com/container-platform/3.3/admin_guide/backup_restore.html
+https://gist.github.com/mattymo/40ad689b8a11e0bfbb7ee415103dabf0
+https://github.com/githubixx/ansible-role-etcd/blob/master/tasks/main.yml
+https://github.com/acidonper/ocp42-etcd-backup-restore-ansible/blob/master/roles/ocp_etcd_backup/tasks/main.yml
+https://medium.com/velotio-perspectives/the-ultimate-guide-to-disaster-recovery-for-your-kubernetes-clusters-94143fcc8c1e
+
+
+--------------------------------------------------------------------------------------------------
+
+K8s Installation Challenges
+
+https://github.com/kubernetes-sigs/kubespray/commit/38688a44866d5ee612f80c16ef81e135d1347653#diff-3772da8d92230aefeb0f36fd9ff45eb8L42-L45
+https://github.com/ansible/ansible/issues/53122
+
+
+--------------------------------------------------------------------------------------------------
+
+EleasticSearch DocHelp
+
+https://kb.objectrocket.com/elasticsearch/how-to-check-your-elasticsearch-version-from-the-command-line
+
+----------------------------------------------------------------------------------------------------
+
+Helpful Links
+
+https://medium.com/@alenkacz/whats-the-difference-between-runc-containerd-docker-3fc8f79d4d6e
+https://www.mirantis.com/blog/everything-you-ever-wanted-to-know-about-using-etcd-with-kubernetes-v1-6-but-were-afraid-to-ask/
+----------------------------------------------------------------------------------------------------------
+
+Helm installation
+
+https://devopscube.com/install-configure-helm-kubernetes/
+
+https://medium.com/google-cloud/kubernetes-and-helm-create-your-own-helm-chart-5f54aed894c2
+
+-------------------------------------------------------------------------------------------------------------
+
+Redis Stable chart Installation
+
+https://github.com/helm/charts/blob/master/stable/redis-ha/values.yaml
+https://github.com/helm/charts/tree/master/stable/redis    ---------------  Bitnami Redis
+https://engineering.bitnami.com/articles/deploy-and-scale-a-redis-cluster-on-kubernetes-with-bitnami-and-helm.html
+https://medium.com/@iamvishalkhare/create-a-redis-cluster-faa89c5a6bb4
+
+-------------------------------------------------------------------------------------------------------------
+Exposing Headless Service K8s
+
+https://itnext.io/exposing-statefulsets-in-kubernetes-698730fb92a1#6fc0
+https://stackoverflow.com/questions/57167332/expose-a-redis-cluster-with-a-kubernetes-statefulset-to-the-internet
+https://medium.com/zero-to/setup-persistence-redis-cluster-in-kubertenes-7d5b7ffdbd98
+
+
+
+-----------------------------------------------------------------------------------------------------------
+
+Installing Elasticsearch and Kibana
+
+https://www.netbraintech.com/docs/ie80/help/installing-elasticsearch-on-linux.htm
+https://casesup.com/category/knowledgebase/installation/how-to-install-elasticsearch-on-linux-server
+https://www.centlinux.com/2019/07/install-elastic-stack-on-centos-7.html
+https://www.howtoforge.com/tutorial/how-to-install-elastic-stack-on-centos-7/
+
+-----------------------------------------------------------------------------------------------------------
+
+Elastic Upgrade
+
+https://stackoverflow.com/questions/52832983/upgrading-from-5-2-2-to-6-4-2-yum-install-vs-yum-update
+
+https://unix.stackexchange.com/questions/528140/yum-install-unexpected-nothing-to-do-while-upgrading-elasticsearch
+
+----------------------------------------------------------------------------------------------------------------
+
+Elasticsearch Upgrade challenges
+
+https://discuss.elastic.co/t/elasticsearch-will-not-start-no-logs-code-exited-status-1-failure/135797/2
+
+------------------------------------------------------------------------------------------------------------------
+KIbana Upgarde
+
+https://kobelb.github.io/kibana-rbac-docs/upgrade-standard.html
+https://medium.com/@sivaprakash123/reindex-kibana-from-5-6-to-6-x-1ade106e6e32
+
+----------------------------------------------------------------------------------------------------------------------
+
+KIbana Upgrade Challenges
+
+https://discuss.elastic.co/t/kibana-service-failed-to-start/191702/14
+https://discuss.elastic.co/t/trouble-starting-up-kibana/90316
+https://github.com/elastic/kibana/issues/7041
+https://discuss.elastic.co/t/kibana-4-5-1-cannot-start-because-of-permission-denied/50392/6
+https://discuss.elastic.co/t/kibana-service-start-failed/189460/8
+
+
+--------------------------------------------------------------------------------------------------------------------------
+
+Setup Watcher in Kibana
+
+https://www.redrock-it.nl/setup-a-watcher-in-kibana-to-send-email-notifications/
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+Metrics Server Deployment
+https://github.com/kubernetes-sigs/metrics-server
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+Prometheus file
+
+prometheus.yaml file -----------------  retention
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+Prometheus AlertManager Configuration
+
+echo 'Cmdsb2JhbDoKICBy' | base64 --decode
+
+https://medium.com/@_ipeacocks/alertmanager-prometheus-notification-configuration-in-kubernetes-fcf63c3517ef
+
+-----------------------------------------------------------------------------------------------------------------------------------
+Grafana SMTP
+
+https://community.grafana.com/t/smtp-configuration-for-docker-container/16370/2
+https://community.grafana.com/t/automatic-sharing-of-dashboard-pdf-png-img-link-sent-to-email/2974/15
+https://thriftly.io/docs/components/Thriftly-Deployment-Beyond-the-Basics/Metrics-Prometheus/Creating-Receiving-Email-Alerts.html
+https://grafana.com/docs/grafana/latest/installation/docker/#default-paths
+
+-----------------------------------------------------------------------------------------------------------------------------------
+Prometheus & Grafana Imp Links
+https://community.grafana.com/t/grafana-http-error-bad-gateway-and-templating-init-failed-errors/4925/2   -------------     Datasource issue in grafana
+
+
+
+http://localhost:8686//api/v5/report/gsgUObMik?apitoken=eyJrIjoicFR2bFZ3OHUwNDlmcWZ2aEpkMFZ1RW50cFMxeDlDM1UiLCJuIjoic2FtcGxlIiwiaWQiOjF9
+
+export POD_NAME=$(kubectl get pods --namespace default -l "app=grafana" -o jsonpath="{.items[0].metadata.name}")
+$ kubectl --namespace default port-forward $POD_NAME 3000
+
+---------------------------------------------------------------------------------------------------------------------------------------
+https://www.devdiaries.net/blog/Single-Node-Kubernetes-Cluster-Part-2/   ------------------   Single Node Cluster 
+
+
+---------------------------------------------------------------------------------------------------------------------------------------
+
+Oracle password expire in Xebia-QA
+ 
+ LOgin to Oracle server
+ exec the running container of oracle then
+ sqlplus
+
+# sqlplus
+
+SQL*Plus: Release 11.2.0.2.0 Production on Tue Sep 29 09:48:54 2020
+
+Copyright (c) 1982, 2011, Oracle.  All rights reserved.
+
+Enter user-name: DYNAMIC_FORM_TEMPLATE
+Enter password: 
+ERROR:
+ORA-28001: the password has expired
+
+
+Changing password for DYNAMIC_FORM_TEMPLATE
+New password: 
+Retype new password: 
+Password changed
+
+Connected to:
+Oracle Database 11g Express Edition Release 11.2.0.2.0 - 64bit Production
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
