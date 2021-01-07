@@ -411,6 +411,24 @@ Oracle Database 11g Express Edition Release 11.2.0.2.0 - 64bit Production
 
 -------------------------------------------------------------------------------------------------------------------------------------------------
 
+Download helm3
+
+go to the path where u have downloaded helm3
+
+mv helm helm3
+
+mv helm3 /usr/local/bin/
+
+Use helm3 as a command across the server
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+keeping kubeconfig file at /home/jenkins/.kube
+
+https://ahmet.im/blog/mastering-kubeconfig/
+
+kubectl get nodes --kubeconfig=file1
+
 
 
 
